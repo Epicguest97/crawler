@@ -15,14 +15,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python
+      # Step 2: Set up Python (skip requirements installation for now)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
+      # Step 3: Install necessary dependencies (including Chrome and Chromium)
+      - name: Install necessary dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -30,34 +30,46 @@ jobs:
             curl \
             unzip \
             python3-pip \
+            chromium-browser \
             libgconf-2-4 \
-            chromium-browser
-          pip install -r requirements.txt
+            libnss3 \
+            libxss1 \
+            libappindicator3-1 \
+            libasound2
 
-      # Step 4: Install Chrome for Testing and matching ChromeDriver
-      - name: Install Chrome for Testing and matching ChromeDriver
+      # Step 4: Install Selenium using pip
+      - name: Install Selenium
         run: |
-          # Get the installed Chrome version
+          pip install selenium
+
+      # Step 5: Get the installed Chrome version
+      - name: Get installed Chrome version
+        id: chrome_version
+        run: |
           CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          
-          # Fetch the ChromeDriver URL that matches the installed Chrome version
+          echo "Installed Chrome version is $CHROME_VERSION"
+          echo "::set-output name=chrome_version::$CHROME_VERSION"
+
+      # Step 6: Download and install the matching ChromeDriver
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=${{ steps.chrome_version.outputs.chrome_version }}
           DRIVER_URL="https://chromedriver.storage.googleapis.com/$CHROME_VERSION/chromedriver_linux64.zip"
-  
-          # Download and install ChromeDriver
-          echo "Installing ChromeDriver for Chrome version $CHROME_VERSION"
+          echo "Downloading ChromeDriver for version $CHROME_VERSION"
           
+          # Download and install the correct ChromeDriver
           wget "$DRIVER_URL" -O chromedriver-linux64.zip
           unzip chromedriver-linux64.zip
           sudo mv chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
 
-      # Step 5: Run the crawler script
+      # Step 7: Run the crawler script (make sure your script is in the correct location)
       - name: Run Selenium crawler
         run: |
           python3 crawler.py
 
-      # Step 6: Upload results as an artifact
-      - name: Upload PDFs as artifacts
+      # Step 8: Upload the results (if you have any result files to upload)
+      - name: Upload crawled PDFs as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: crawled-pdfs
