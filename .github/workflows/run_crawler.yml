@@ -21,26 +21,36 @@ jobs:
           python -m pip install --upgrade pip
           pip install selenium
 
-      - name: Set up Chrome and matching ChromeDriver
+      - name: Install Chrome for Testing and matching ChromeDriver
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip xvfb libxi6
+          # Get latest Chrome for Testing release JSON
+          curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json > versions.json
+    
+          # Extract version and download URLs
+          CHROME_VERSION=$(jq -r '.channels.Stable.version' versions.json)
+          DRIVER_URL=$(jq -r '.channels.Stable.downloads.chromedriver[] | select(.platform == "linux64") | .url' versions.json)
+          CHROME_URL=$(jq -r '.channels.Stable.downloads.chrome[] | select(.platform == "linux64") | .url' versions.json)
 
-          # Install latest stable Google Chrome
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -fy install
+          echo "Installing Chrome for Testing $CHROME_VERSION"
 
-          # Get Chrome version (e.g., 136.0.7103.59 -> 136.0.7103)
-          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -n1)
+          # Download and install Chrome
+          wget "$CHROME_URL" -O chrome-linux.zip
+          unzip chrome-linux.zip
+          sudo mv chrome-linux /opt/chrome
 
-          echo "Installed Chrome version: $CHROME_VERSION"
+          # Add to PATH
+          sudo ln -s /opt/chrome/chrome /usr/local/bin/google-chrome
 
-          # Download matching ChromeDriver
-          DRIVER_URL="https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
-          wget -O chromedriver.zip "$DRIVER_URL"
-          unzip chromedriver.zip
+          # Download and install matching ChromeDriver
+          wget "$DRIVER_URL" -O chromedriver-linux64.zip
+          unzip chromedriver-linux64.zip
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
+
+          # Check versions
+          google-chrome --version
+          chromedriver --version
+
 
 
 
