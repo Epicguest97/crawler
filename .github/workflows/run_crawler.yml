@@ -22,34 +22,29 @@ jobs:
           pip install selenium
 
       - name: Install Chrome for Testing and matching ChromeDriver
-        run: |
-          # Get latest Chrome for Testing release JSON
-          curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json > versions.json
+          run: |
+            curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json > versions.json
     
-          # Extract version and download URLs
-          CHROME_VERSION=$(jq -r '.channels.Stable.version' versions.json)
-          DRIVER_URL=$(jq -r '.channels.Stable.downloads.chromedriver[] | select(.platform == "linux64") | .url' versions.json)
-          CHROME_URL=$(jq -r '.channels.Stable.downloads.chrome[] | select(.platform == "linux64") | .url' versions.json)
+            CHROME_VERSION=$(jq -r '.channels.Stable.version' versions.json)
+            DRIVER_URL=$(jq -r '.channels.Stable.downloads.chromedriver[] | select(.platform == "linux64") | .url' versions.json)
+            CHROME_URL=$(jq -r '.channels.Stable.downloads.chrome[] | select(.platform == "linux64") | .url' versions.json)
 
-          echo "Installing Chrome for Testing $CHROME_VERSION"
+            echo "Installing Chrome for Testing $CHROME_VERSION"
 
-          # Download and install Chrome
-          wget "$CHROME_URL" -O chrome-linux.zip
-          unzip chrome-linux.zip
-          sudo mv chrome-linux /opt/chrome
+            wget "$CHROME_URL" -O chrome-linux.zip
+            unzip chrome-linux.zip
+            sudo mv chrome-linux64 /opt/chrome
 
-          # Add to PATH
-          sudo ln -s /opt/chrome/chrome /usr/local/bin/google-chrome
+            sudo ln -s /opt/chrome/chrome /usr/local/bin/google-chrome
 
-          # Download and install matching ChromeDriver
-          wget "$DRIVER_URL" -O chromedriver-linux64.zip
-          unzip chromedriver-linux64.zip
-          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
+            wget "$DRIVER_URL" -O chromedriver-linux64.zip
+            unzip chromedriver-linux64.zip
+            sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+            sudo chmod +x /usr/local/bin/chromedriver
 
-          # Check versions
-          google-chrome --version
-          chromedriver --version
+            google-chrome --version
+            chromedriver --version
+
 
 
 
