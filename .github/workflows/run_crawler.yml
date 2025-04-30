@@ -2,75 +2,54 @@ name: Selenium Crawler
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  selenium-crawl:
-    runs-on: ubuntu-22.04
+  crawl:
+    runs-on: ubuntu-latest
+
     steps:
-    
-      # Step 1: Check out the code
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      # Step 2: Set up Python (skip requirements installation for now)
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      # Step 3: Install necessary dependencies (including Chrome and Chromium)
-      - name: Install necessary dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            wget \
-            curl \
-            unzip \
-            python3-pip \
-            chromium-browser \
-            libgconf-2-4 \
-            libnss3 \
-            libxss1 \
-            libappindicator3-1 \
-            libasound2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip curl python3-pip libgconf-2-4 libnss3 libxss1 libappindicator3-1 libasound2
+        pip install selenium
 
-      # Step 4: Install Selenium using pip
-      - name: Install Selenium
-        run: |
-          pip install selenium
+    - name: Get installed Chrome version
+      id: get_chrome
+      run: |
+        sudo apt-get install -y google-chrome-stable
+        VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+\.\d+')
+        echo "Chrome version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # Step 5: Get the installed Chrome version
-      - name: Get installed Chrome version
-        id: chrome_version
-        run: |
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          echo "Installed Chrome version is $CHROME_VERSION"
-          echo "::set-output name=chrome_version::$CHROME_VERSION"
+    - name: Install matching ChromeDriver
+      run: |
+        VERSION=${{ steps.get_chrome.outputs.version }}
+        MAJOR=$(echo $VERSION | cut -d '.' -f 1-3)
+        DRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$VERSION/linux64/chromedriver-linux64.zip"
 
-      # Step 6: Download and install the matching ChromeDriver
-      - name: Install ChromeDriver
-        run: |
-          CHROME_VERSION=${{ steps.chrome_version.outputs.chrome_version }}
-          DRIVER_URL="https://chromedriver.storage.googleapis.com/$CHROME_VERSION/chromedriver_linux64.zip"
-          echo "Downloading ChromeDriver for version $CHROME_VERSION"
-          
-          # Download and install the correct ChromeDriver
-          wget "$DRIVER_URL" -O chromedriver-linux64.zip
-          unzip chromedriver-linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
+        echo "Downloading ChromeDriver from $DRIVER_URL"
+        wget "$DRIVER_URL" -O chromedriver.zip || (echo "Failed to download ChromeDriver for $VERSION" && exit 1)
+        unzip chromedriver.zip
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+        sudo chmod +x /usr/local/bin/chromedriver
 
-      # Step 7: Run the crawler script (make sure your script is in the correct location)
-      - name: Run Selenium crawler
-        run: |
-          python3 crawler.py
+    - name: Run Selenium script
+      run: |
+        python3 crawler.py
 
-      # Step 8: Upload the results (if you have any result files to upload)
-      - name: Upload crawled PDFs as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: crawled-pdfs
-          path: pdf_results/
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: crawled-data
+        path: output/
