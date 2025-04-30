@@ -21,17 +21,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install selenium
 
-      - name: Set up Chrome for Selenium
+      - name: Set up Chrome and matching ChromeDriver
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip xvfb libxi6
+
+          # Install latest stable Google Chrome
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -fy install
-          CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-          wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
+
+          # Get Chrome version (e.g., 136.0.7103.59 -> 136.0.7103)
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -n1)
+
+          echo "Installed Chrome version: $CHROME_VERSION"
+
+          # Download matching ChromeDriver
+          DRIVER_URL="https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
+          wget -O chromedriver.zip "$DRIVER_URL"
+          unzip chromedriver.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
+
 
 
       - name: Run crawler
