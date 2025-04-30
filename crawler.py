@@ -100,7 +100,9 @@ def crawl_year(year):
 
 def main():
     os.makedirs("pdf_results", exist_ok=True)
-    years_to_crawl = [2019, 2015, 2014,2013,2012,2011]
+    years_to_crawl = [2019]
+    os.makedirs("output", exist_ok=True)
+
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(years_to_crawl)) as executor:
         future_to_year = {executor.submit(crawl_year, year): year for year in years_to_crawl}
