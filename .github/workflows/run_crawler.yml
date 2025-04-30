@@ -60,7 +60,7 @@ jobs:
 
     # Upload the JSON output as an artifact
     - name: Upload crawled PDFs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: crawled-pdfs
         path: ./pdf_results/*.json
