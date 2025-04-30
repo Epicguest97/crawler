@@ -20,13 +20,13 @@ jobs:
       with:
         python-version: '3.8'
 
-    # Install dependencies
+    # Install dependencies directly (without requirements.txt)
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y wget unzip curl jq
         sudo apt-get install -y python3-pip
-        sudo pip3 install -r requirements.txt  # assuming you have a requirements.txt for selenium
+        pip3 install selenium  # Install Selenium directly
 
     # Install Chrome for Testing and matching ChromeDriver
     - name: Install Chrome for Testing and matching ChromeDriver
