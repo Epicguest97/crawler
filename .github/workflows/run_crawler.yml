@@ -1,0 +1,46 @@
+name: Run Selenium Crawler
+
+on:
+  workflow_dispatch:  # Manual trigger from GitHub UI
+
+jobs:
+  run-crawler:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium
+
+    - name: Install Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt install -y ./google-chrome-stable_current_amd64.deb
+
+    - name: Install ChromeDriver
+      run: |
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+        wget -O chromedriver.zip https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+        unzip chromedriver.zip
+        sudo mv chromedriver /usr/local/bin/
+        chmod +x /usr/local/bin/chromedriver
+
+    - name: Run the crawler
+      run: python crawler.py
+
+    - name: Upload PDF JSON results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pdf-jsons
+        path: "*.json"
