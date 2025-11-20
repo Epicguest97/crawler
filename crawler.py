@@ -100,7 +100,7 @@ def crawl_year(year):
 
 def main():
     os.makedirs("pdf_results", exist_ok=True)
-    years_to_crawl = [2019]
+    years_to_crawl = [2025]
     os.makedirs("output", exist_ok=True)
 
 
