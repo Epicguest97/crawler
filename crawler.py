@@ -88,7 +88,13 @@ def crawl_year(year):
             crawl_folder([])
 
         os.makedirs("pdf_results", exist_ok=True)
-        output_file = f"pdf_results/{year}_pdfs.json"
+        os.makedirs("output", exist_ok=True)
+
+        pdf_file = f"pdf_results/{year}_pdfs.json"
+        with open(pdf_file, "w") as f:
+            json.dump(pdfs, f, indent=2)
+
+        output_file = f"output/{year}_pdfs.json"
         with open(output_file, "w") as f:
             json.dump(pdfs, f, indent=2)
 

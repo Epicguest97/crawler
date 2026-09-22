@@ -50,7 +50,14 @@ jobs:
         python3 crawler.py
 
     - name: Upload artifacts
+      id: upload
       uses: actions/upload-artifact@v4
       with:
         name: crawled-data
         path: output/
+        if-no-files-found: error
+
+    - name: Show artifact link
+      run: |
+        echo "Artifact URL: ${{ steps.upload.outputs.artifact-url }}"
+        echo "Artifact URL: ${{ steps.upload.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
