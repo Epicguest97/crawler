@@ -28,16 +28,18 @@ def crawl_year(year):
     def get_folder_links():
         return driver.find_elements(By.XPATH, "//a[starts-with(@id, 'ctl') and contains(@href, '__doPostBack') and img[contains(@src, 'folder')]]")
 
-    def click_folder(folder):
-        wait.until(EC.element_to_be_clickable(folder)).click()
-        time.sleep(0.3)
-
-    def find_and_click_folder(target_name):
+    def click_folder_by_name(target_name):
         for folder in get_folder_links():
             if folder.text.strip() == target_name:
-                print(f"📂 Found target folder: {target_name}")
-                click_folder(folder)
+                wait.until(EC.element_to_be_clickable(folder)).click()
+                time.sleep(0.3)
                 return True
+        return False
+
+    def find_and_click_folder(target_name):
+        if click_folder_by_name(target_name):
+            print(f"📂 Found target folder: {target_name}")
+            return True
         print(f"❌ Could not find folder: {target_name}")
         return False
 
@@ -49,7 +51,8 @@ def crawl_year(year):
                 continue
             print("📂" + "  " * depth + f"Entering: {label}")
             try:
-                click_folder(folder)
+                if not click_folder_by_name(label):
+                    continue
                 crawl_folder(path_so_far + [label], depth + 1)
                 back_folder = driver.find_elements(By.XPATH, "//a[contains(text(), '..')]")
                 if back_folder:
